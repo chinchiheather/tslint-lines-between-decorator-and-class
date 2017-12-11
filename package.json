@@ -1,0 +1,26 @@
+{
+  "name": "tslint-lines-between-decorator-and-class",
+  "version": "1.0.0",
+  "description": "TSLint rule to enforce number of new lines between a class and its decorator - designed with Angular projects in mind",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chinchiheather/tslint-lines-between-decorator-and-class.git"
+  },
+  "keywords": [
+    "tslint",
+    "custom-tslint-rule"
+  ],
+  "author": "Heather Roberts",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chinchiheather/tslint-lines-between-decorator-and-class/issues"
+  },
+  "homepage": "https://github.com/chinchiheather/tslint-lines-between-decorator-and-class#readme",
+  "devDependencies": {
+    "@types/node": "8.0.57",
+    "tslint": "4.5.1",
+    "typescript": "2.3.4"
+  }
+}
