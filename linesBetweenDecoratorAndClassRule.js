@@ -28,12 +28,15 @@ var NoLinesBetweenDecoratorAndClassWalker = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     NoLinesBetweenDecoratorAndClassWalker.prototype.visitClassDeclaration = function (node) {
+        this.validateRule(node);
+        _super.prototype.visitClassDeclaration.call(this, node);
+    };
+    NoLinesBetweenDecoratorAndClassWalker.prototype.validateRule = function (node) {
         var sourceFile = this.getSourceFile();
         var start = node.getStart();
         var end = node.getEnd();
         var text = node.getText();
-        var firstChar = text.charAt(0);
-        if (firstChar === '@') {
+        if (text.charAt(0) === '@') {
             var endOfDecorator_1 = start + text.indexOf('})') + 2;
             var lineStartPositions_1 = sourceFile.getLineStarts();
             var nextLineIdx = lineStartPositions_1.findIndex(function (startPos, idx) {
@@ -49,12 +52,35 @@ var NoLinesBetweenDecoratorAndClassWalker = (function (_super) {
                     break;
                 }
             }
-            var targetNewLines = this.getOptions()[0];
-            if (numNewLines !== targetNewLines) {
-                this.addFailure(this.createFailure(lineStartPositions_1[nextLineIdx], end, "need " + targetNewLines + " new lines between decorator and class"));
+            var diff = numNewLines - this.getOptions()[0];
+            if (diff !== 0) {
+                var fixedText = void 0;
+                if (diff > 0) {
+                    // too many new lines, cut some out
+                    fixedText = sourceFile.getText().substring(start, endOfDecorator_1);
+                    fixedText += sourceFile.getText().substring(endOfDecorator_1 + diff);
+                }
+                else {
+                    // not enough new lines, add some in
+                    fixedText = sourceFile.getText().substring(start, endOfDecorator_1);
+                    fixedText += Array(Math.abs(diff)).fill('\n').join('');
+                    fixedText += sourceFile.getText().substring(endOfDecorator_1);
+                }
+                this.failRule(start, end, fixedText, lineStartPositions_1[nextLineIdx]);
             }
         }
-        _super.prototype.visitClassDeclaration.call(this, node);
+    };
+    NoLinesBetweenDecoratorAndClassWalker.prototype.failRule = function (start, end, fixedText, lineNo) {
+        var replacement = new Lint.Replacement(start, end, fixedText);
+        // handle both tslint v4 & v5
+        var fix;
+        if (typeof Lint['Fix'] === 'undefined') {
+            fix = replacement;
+        }
+        else {
+            fix = new Lint['Fix']('lines-between-decorator-and-class', [replacement]);
+        }
+        this.addFailure(this.createFailure(lineNo, end, "need " + this.getOptions()[0] + " new lines between decorator and class", fix));
     };
     return NoLinesBetweenDecoratorAndClassWalker;
 }(Lint.RuleWalker));

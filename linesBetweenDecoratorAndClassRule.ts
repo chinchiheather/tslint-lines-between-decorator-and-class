@@ -11,14 +11,17 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 class NoLinesBetweenDecoratorAndClassWalker extends Lint.RuleWalker {
   public visitClassDeclaration(node: ts.ClassDeclaration) {
-    const sourceFile = this.getSourceFile();
+    this.validateRule(node);
+    super.visitClassDeclaration(node);
+  }
 
+  private validateRule(node: ts.ClassDeclaration) {
+    const sourceFile = this.getSourceFile();
     const start = node.getStart();
     const end = node.getEnd();
     const text = node.getText();
 
-    const firstChar = text.charAt(0);
-    if (firstChar === '@') {
+    if (text.charAt(0) === '@') {
       const endOfDecorator = start + text.indexOf('})') + 2;
 
       const lineStartPositions = <any>sourceFile.getLineStarts();
@@ -36,13 +39,39 @@ class NoLinesBetweenDecoratorAndClassWalker extends Lint.RuleWalker {
         }
       }
 
-      const targetNewLines = this.getOptions()[0];
-      if (numNewLines !== targetNewLines) {
-        this.addFailure(this.createFailure(lineStartPositions[nextLineIdx], end,
-          `need ${targetNewLines} new lines between decorator and class`));
+      const diff = numNewLines - this.getOptions()[0];
+      if (diff !== 0) {
+        let fixedText: string;
+        if (diff > 0) {
+          // too many new lines, cut some out
+          fixedText = sourceFile.getText().substring(start, endOfDecorator);
+          fixedText += sourceFile.getText().substring(endOfDecorator + diff);
+        } else {
+          // not enough new lines, add some in
+          fixedText = sourceFile.getText().substring(start, endOfDecorator);
+          fixedText += Array(Math.abs(diff)).fill('\n').join('');
+          fixedText += sourceFile.getText().substring(endOfDecorator);
+        }
+
+        this.failRule(start, end, fixedText, lineStartPositions[nextLineIdx]);
       }
     }
+  }
 
-    super.visitClassDeclaration(node);
+  private failRule(start: number, end: number, fixedText: string, lineNo: number) {
+    const replacement = new Lint.Replacement(start, end, fixedText);
+    // handle both tslint v4 & v5
+    let fix: any;
+    if (typeof Lint['Fix'] === 'undefined') {
+      fix = replacement;
+    } else {
+      fix = new Lint['Fix']('lines-between-decorator-and-class', [replacement]);
+    }
+
+    this.addFailure(
+      this.createFailure(
+        lineNo, end, `need ${this.getOptions()[0]} new lines between decorator and class`, fix
+      )
+    );
   }
 }
