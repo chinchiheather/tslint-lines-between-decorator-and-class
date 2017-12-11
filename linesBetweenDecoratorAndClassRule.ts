@@ -22,7 +22,7 @@ class NoLinesBetweenDecoratorAndClassWalker extends Lint.RuleWalker {
     const text = node.getText();
 
     if (text.charAt(0) === '@') {
-      const endOfDecorator = start + text.indexOf('})') + 2;
+      const endOfDecorator = start + text.indexOf(')') + 1;
 
       const lineStartPositions = <any>sourceFile.getLineStarts();
       const nextLineIdx = lineStartPositions.findIndex((startPos, idx) =>

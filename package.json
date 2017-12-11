@@ -1,6 +1,6 @@
 {
   "name": "tslint-lines-between-decorator-and-class",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TSLint rule to enforce number of new lines between a class and its decorator - designed with Angular projects in mind",
   "scripts": {
     "compile": "tsc linesBetweenDecoratorAndClassRule.ts --target ES5 --lib DOM,ES6"

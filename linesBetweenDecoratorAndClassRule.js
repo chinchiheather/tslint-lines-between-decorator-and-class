@@ -37,7 +37,7 @@ var NoLinesBetweenDecoratorAndClassWalker = (function (_super) {
         var end = node.getEnd();
         var text = node.getText();
         if (text.charAt(0) === '@') {
-            var endOfDecorator_1 = start + text.indexOf('})') + 2;
+            var endOfDecorator_1 = start + text.indexOf(')') + 1;
             var lineStartPositions_1 = sourceFile.getLineStarts();
             var nextLineIdx = lineStartPositions_1.findIndex(function (startPos, idx) {
                 return startPos > endOfDecorator_1 || idx === lineStartPositions_1.length - 1;
