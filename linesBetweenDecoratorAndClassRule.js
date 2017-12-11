@@ -17,12 +17,10 @@ var Rule = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Rule.prototype.apply = function (sourceFile) {
-        console.log(JSON.stringify(this.getOptions()));
         return this.applyWithWalker(new NoLinesBetweenDecoratorAndClassWalker(sourceFile, this.getOptions()));
     };
     return Rule;
 }(Lint.Rules.AbstractRule));
-Rule.FAILURE_STRING = 'no new lines allowed between decorator and class';
 exports.Rule = Rule;
 var NoLinesBetweenDecoratorAndClassWalker = (function (_super) {
     __extends(NoLinesBetweenDecoratorAndClassWalker, _super);
@@ -36,14 +34,24 @@ var NoLinesBetweenDecoratorAndClassWalker = (function (_super) {
         var text = node.getText();
         var firstChar = text.charAt(0);
         if (firstChar === '@') {
-            // locate last char of decorator
             var endOfDecorator_1 = start + text.indexOf('})') + 2;
             var lineStartPositions_1 = sourceFile.getLineStarts();
-            var nextLine = lineStartPositions_1.findIndex(function (startPos, idx) {
+            var nextLineIdx = lineStartPositions_1.findIndex(function (startPos, idx) {
                 return startPos > endOfDecorator_1 || idx === lineStartPositions_1.length - 1;
             });
-            if (lineStartPositions_1[nextLine] === lineStartPositions_1[nextLine + 1] - 1) {
-                this.addFailure(this.createFailure(lineStartPositions_1[nextLine], end, Rule.FAILURE_STRING));
+            var numNewLines = 0;
+            var lineIdx = nextLineIdx;
+            while (true) {
+                if (lineStartPositions_1[lineIdx] === lineStartPositions_1[++lineIdx] - 1) {
+                    numNewLines++;
+                }
+                else {
+                    break;
+                }
+            }
+            var targetNewLines = this.getOptions()[0];
+            if (numNewLines !== targetNewLines) {
+                this.addFailure(this.createFailure(lineStartPositions_1[nextLineIdx], end, "need " + targetNewLines + " new lines between decorator and class"));
             }
         }
         _super.prototype.visitClassDeclaration.call(this, node);
